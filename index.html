@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Report Generator | Cyberpunk Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-neon: #00ffff;
+            --secondary-neon: #ff00ff;
+            --accent-neon: #ffff00;
+            --danger-neon: #ff0066;
+            --success-neon: #00ff88;
+            --bg-dark: #0a0a0a;
+            --bg-medium: #1a1a2e;
+            --bg-light: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8b8;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 255, 0, 0.05) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 10s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Mouse Glow Effect */
+        .mouse-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon), var(--accent-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            animation: textGlow 2s ease-in-out infinite alternate;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes textGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: rgba(26, 26, 46, 0.4);
+            border: 2px solid transparent;
+            border-image: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon)) 1;
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 50px rgba(0, 255, 255, 0.3),
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Report Type Selection */
+        .report-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-type {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .report-type input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .report-type label {
+            display: block;
+            background: rgba(22, 33, 62, 0.6);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-type label::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            border-radius: 15px;
+            opacity: 0;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        .report-type:hover label {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .report-type input[type="radio"]:checked + label {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--primary-neon);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .report-type input[type="radio"]:checked + label::before {
+            opacity: 1;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes borderRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .report-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .report-name {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+        }
+
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-neon);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-neon);
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.5),
+                inset 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+
+        /* Datetime Input */
+        .datetime-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .datetime-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-dark);
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Output Section */
+        .output-section {
+            margin-top: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .output-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .output-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .output-title {
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--accent-neon);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .char-count {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .output-text {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            word-wrap: break-word;
+        }
+
+        .copy-btn {
+            background: linear-gradient(45deg, var(--success-neon), var(--primary-neon));
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.5rem;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(45deg, var(--success-neon), var(--accent-neon));
+            animation: copySuccess 0.6s ease;
+        }
+
+        @keyframes copySuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: linear-gradient(45deg, var(--success-neon), var(--primary-neon));
+            color: var(--bg-dark);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .report-types {
+                grid-template-columns: 1fr;
+            }
+
+            .notification {
+                right: 1rem;
+                left: 1rem;
+                transform: translateY(-100px);
+            }
+
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            border-radius: 5px;
+        }
+
+        /* Selection */
+        ::selection {
+            background: var(--primary-neon);
+            color: var(--bg-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="mouse-glow"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1>ML REPORT GENERATOR</h1>
+            <p> Created By Jinx Rina </p>
+        </header>
+
+        <main class="main-content">
+            <form id="reportForm">
+                <div class="form-group">
+                    <label>Select Report Type</label>
+                    <div class="report-types">
+                        <div class="report-type">
+                            <input type="radio" id="afk" name="reportType" value="afk" checked>
+                            <label for="afk">
+                                <span class="report-icon">🎮</span>
+                                <span class="report-name">AFK</span>
+                            </label>
+                        </div>
+                        <div class="report-type">
+                            <input type="radio" id="feeding" name="reportType" value="feeding">
+                            <label for="feeding">
+                                <span class="report-icon">💀</span>
+                                <span class="report-name">Feeding</span>
+                            </label>
+                        </div>
+                        <div class="report-type">
+                            <input type="radio" id="toxic" name="reportType" value="toxic">
+                            <label for="toxic">
+                                <span class="report-icon">💬</span>
+                                <span class="report-name">Toxic Chat</span>
+                            </label>
+                        </div>
+                        <div class="report-type">
+                            <input type="radio" id="cheating" name="reportType" value="cheating">
+                            <label for="cheating">
+                                <span class="report-icon">🚫</span>
+                                <span class="report-name">Cheating</span>
+                            </label>
+                        </div>
+                        <div class="report-type">
+                            <input type="radio" id="inappropriate" name="reportType" value="inappropriate">
+                            <label for="inappropriate">
+                                <span class="report-icon">⚠️</span>
+                                <span class="report-name">Inappropriate</span>
+                            </label>
+                        </div>
+                        <div class="report-type">
+                            <input type="radio" id="wintrading" name="reportType" value="wintrading">
+                            <label for="wintrading">
+                                <span class="report-icon">🤝</span>
+                                <span class="report-name">Win Trading</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="battleId">Battle ID</label>
+                    <input type="text" id="battleId" class="form-control" placeholder="Enter Battle ID..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Date & Time</label>
+                    <div class="datetime-group">
+                        <input type="date" id="date" class="form-control" required>
+                        <input type="time" id="time" class="form-control" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="generate-btn">
+                    Generate Report
+                </button>
+            </form>
+
+            <div id="outputSection" class="output-section">
+                <div class="output-card">
+                    <div class="output-header">
+                        <div class="output-title">
+                            📝 500 Character Report
+                        </div>
+                        <div class="char-count" id="charCount500">0 / 500</div>
+                    </div>
+                    <div class="output-text" id="output500"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('output500', this)">
+                        Copy to Clipboard
+                    </button>
+                </div>
+
+                <div class="output-card">
+                    <div class="output-header">
+                        <div class="output-title">
+                            📱 180 Character Report
+                        </div>
+                        <div class="char-count" id="charCount180">0 / 180</div>
+                    </div>
+                    <div class="output-text" id="output180"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('output180', this)">
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2024 ML Report Generator | Designed for Mobile Legends Players</p>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification">
+        ✓ Copied to clipboard!
+    </div>
+
+    <script>
+        // Mouse glow effect
+        const mouseGlow = document.querySelector('.mouse-glow');
+        document.addEventListener('mousemove', (e) => {
+            mouseGlow.style.left = e.clientX + 'px';
+            mouseGlow.style.top = e.clientY + 'px';
+        });
+
+        // Report templates
+        const reportTemplates = {
+            afk: {
+                long: "Player was AFK during the match with Battle ID: {battleId} on {date} at {time}. This player abandoned the team leaving us at a disadvantage throughout the game. They disconnected early and never returned, causing significant impact on team performance and morale. The player showed no effort to reconnect or communicate with the team. This behavior ruins the gaming experience for other players and should be penalized accordingly. Please take appropriate action against this player.",
+                short: "AFK player in Battle ID: {battleId} on {date} {time}. Left team at disadvantage, never returned. Ruined match experience. Please take action."
+            },
+            feeding: {
+                long: "Player intentionally fed enemies in Battle ID: {battleId} on {date} at {time}. They repeatedly ran into enemy turrets and gave away kills without attempting to play properly. This deliberate feeding gave the enemy team a massive gold and experience advantage. The player ignored team requests to stop and continued this behavior throughout the match. This is clear match sabotage that negatively impacts all teammates. Immediate action required.",
+                short: "Intentional feeding in Battle ID: {battleId} on {date} {time}. Repeatedly died to enemies/turrets on purpose. Match sabotage. Action needed."
+            },
+            toxic: {
+                long: "Player exhibited extremely toxic behavior in Battle ID: {battleId} on {date} at {time}. They used offensive language, harassed teammates, and created a hostile environment. The player continuously blamed others, used profanity, and made personal attacks throughout the match. This verbal abuse seriously affected team coordination and player morale. Such toxic communication violates community standards and ruins the game for everyone. Please review chat logs.",
+                short: "Toxic chat abuse in Battle ID: {battleId} on {date} {time}. Offensive language, harassment, personal attacks. Violated community standards."
+            },
+            cheating: {
+                long: "Suspected cheating/hacking in Battle ID: {battleId} on {date} at {time}. Player displayed impossible movements, had no cooldowns on abilities, and seemed to have map hack visibility. They knew enemy positions without vision and landed every skillshot perfectly. The player's performance was clearly enhanced by third-party tools. This unfair advantage completely ruined the competitive integrity of the match. Please investigate this account thoroughly.",
+                short: "Cheating/hacking in Battle ID: {battleId} on {date} {time}. Map hack, no cooldowns, impossible plays. Using third-party tools. Investigation needed."
+            },
+            inappropriate: {
+                long: "Player used inappropriate name/content in Battle ID: {battleId} on {date} at {time}. Their username and/or in-game behavior contained offensive, sexual, or discriminatory content. This violates the game's terms of service and creates an uncomfortable environment for other players, especially minors. The content was clearly inappropriate and offensive to multiple players in the match. This account should be reviewed for immediate action.",
+                short: "Inappropriate name/content in Battle ID: {battleId} on {date} {time}. Offensive/sexual content violating TOS. Uncomfortable for other players."
+            },
+            wintrading: {
+                long: "Suspected win trading in Battle ID: {battleId} on {date} at {time}. Player appeared to be cooperating with enemies to manipulate match results. They deliberately avoided fighting certain enemies and helped them secure objectives. The player's actions were clearly coordinated with the opposing team to affect rankings unfairly. This type of match manipulation destroys competitive integrity and should be severely punished. Please investigate all involved accounts.",
+                short: "Win trading in Battle ID: {battleId} on {date} {time}. Cooperating with enemies, manipulating results. Destroying competitive integrity."
+            }
+        };
+
+        // Form submission
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const reportType = document.querySelector('input[name="reportType"]:checked').value;
+            const battleId = document.getElementById('battleId').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            
+            // Format date
+            const dateObj = new Date(date);
+            const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            // Generate reports
+            const template = reportTemplates[reportType];
+            const replacements = {
+                battleId: battleId,
+                date: formattedDate,
+                time: time
+            };
+            
+            let longReport = template.long;
+            let shortReport = template.short;
+            
+            // Replace placeholders
+            Object.keys(replacements).forEach(key => {
+                longReport = longReport.replace(`{${key}}`, replacements[key]);
+                shortReport = shortReport.replace(`{${key}}`, replacements[key]);
+            });
+            
+            // Ensure reports fit within character limits
+            if (longReport.length > 500) {
+                longReport = longReport.substring(0, 497) + '...';
+            }
+            if (shortReport.length > 180) {
+                shortReport = shortReport.substring(0, 177) + '...';
+            }
+            
+            // Display reports
+            document.getElementById('output500').textContent = longReport;
+            document.getElementById('output180').textContent = shortReport;
+            
+            // Update character counts
+            document.getElementById('charCount500').textContent = `${longReport.length} / 500`;
+            document.getElementById('charCount180').textContent = `${shortReport.length} / 180`;
+            
+            // Show output section
+            document.getElementById('outputSection').classList.add('show');
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId, button) {
+            const text = document.getElementById(elementId).textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show notification
+                const notification = document.getElementById('notification');
+                notification.classList.add('show');
+                
+                // Update button
+                button.classList.add('copied');
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                
+                // Reset after delay
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    button.classList.remove('copied');
+                    button.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Please try again.');
+            });
+        }
+
+        // Set current date and time
+        window.addEventListener('load', () => {
+            const now = new Date();
+            document.getElementById('date').valueAsDate = now;
+            document.getElementById('time').value = now.toTimeString().slice(0, 5);
+        });
+    </script>
+</body>
+</html>
